@@ -45,6 +45,39 @@ const overdueCount = computed(() => {
 })
 
 const highlightedDates = computed(() => Object.keys(groupedByDate.value))
+const selectedDateReminder = computed(() => {
+  const selectedTasks = tasksForSelectedDate.value
+
+  if (!selectedTasks.length) {
+    return {
+      tone: 'calm',
+      title: '今天可以安排新计划',
+      description: '当前选中日期没有到期任务，适合提前布局新的事项。',
+    }
+  }
+
+  if (selectedTasks.some((task) => isOverdue(task))) {
+    return {
+      tone: 'danger',
+      title: '这里有需要立刻处理的逾期任务',
+      description: '建议切到任务列表集中处理，先把超时事项收敛掉。',
+    }
+  }
+
+  if (selectedTasks.some((task) => task.priority === 'high' && task.status !== 'completed')) {
+    return {
+      tone: 'warning',
+      title: '这一天存在高优先级任务',
+      description: '建议尽早预留完整时间块，避免关键任务被零散事务打断。',
+    }
+  }
+
+  return {
+    tone: 'info',
+    title: '当天任务节奏较平稳',
+    description: '可以根据状态或分类继续细分处理顺序。',
+  }
+})
 
 function tasksForCalendarDay(day: string) {
   return groupedByDate.value[day] ?? []
@@ -58,12 +91,60 @@ function editTask(taskId: string) {
   router.push(`/tasks/${taskId}/edit`)
 }
 
+function reminderLabel(task: TaskItem) {
+  const diffDays = dayjs(task.dueDate).startOf('day').diff(dayjs().startOf('day'), 'day')
+
+  if (task.status === 'completed') {
+    return '已完成'
+  }
+
+  if (diffDays < 0) {
+    return `逾期 ${Math.abs(diffDays)} 天`
+  }
+
+  if (diffDays === 0) {
+    return '今日截止'
+  }
+
+  if (diffDays === 1) {
+    return '明日截止'
+  }
+
+  if (diffDays <= 3) {
+    return `${diffDays} 天后截止`
+  }
+
+  return ''
+}
+
+function reminderTone(task: TaskItem): 'success' | 'danger' | 'warning' | 'info' {
+  if (task.status === 'completed') {
+    return 'success'
+  }
+
+  if (isOverdue(task)) {
+    return 'danger'
+  }
+
+  const diffDays = dayjs(task.dueDate).startOf('day').diff(dayjs().startOf('day'), 'day')
+  return diffDays <= 3 ? 'warning' : 'info'
+}
+
 function goToCreate() {
   router.push('/tasks/new')
 }
 
 function selectToday() {
   selectedDate.value = new Date()
+}
+
+function openSelectedDateTasks() {
+  router.push({
+    path: '/tasks',
+    query: {
+      dueDate: selectedDateKey.value,
+    },
+  })
 }
 </script>
 
@@ -77,6 +158,7 @@ function selectToday() {
       </div>
       <div class="calendar-page__hero-actions">
         <el-button plain @click="selectToday">回到今天</el-button>
+        <el-button plain @click="openSelectedDateTasks">联动到任务列表</el-button>
         <el-button plain @click="router.push('/tasks')">查看列表</el-button>
         <el-button type="primary" @click="goToCreate">新增任务</el-button>
       </div>
@@ -131,6 +213,12 @@ function selectToday() {
           <p>当天共有 {{ tasksForSelectedDate.length }} 项到期任务。</p>
         </div>
 
+        <article class="calendar-page__reminder" :class="`tone-${selectedDateReminder.tone}`">
+          <strong>{{ selectedDateReminder.title }}</strong>
+          <p>{{ selectedDateReminder.description }}</p>
+          <el-button plain size="small" @click="openSelectedDateTasks">跳到当天任务列表</el-button>
+        </article>
+
         <div v-if="tasksForSelectedDate.length" class="calendar-page__sidebar-list">
           <article v-for="task in tasksForSelectedDate" :key="task.id" class="calendar-page__task-card">
             <div class="calendar-page__task-top">
@@ -149,6 +237,7 @@ function selectToday() {
                 {{ task.status === 'todo' ? '待办' : task.status === 'in-progress' ? '进行中' : '已完成' }}
               </el-tag>
               <el-tag v-if="isOverdue(task)" type="danger">已逾期</el-tag>
+              <el-tag v-if="reminderLabel(task)" :type="reminderTone(task)">{{ reminderLabel(task) }}</el-tag>
             </div>
 
             <div v-if="task.tags.length" class="calendar-page__task-tags">
@@ -332,6 +421,44 @@ function selectToday() {
 .calendar-page__sidebar {
   display: grid;
   gap: 16px;
+}
+
+.calendar-page__reminder {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.calendar-page__reminder strong,
+.calendar-page__reminder p {
+  margin: 0;
+}
+
+.calendar-page__reminder p {
+  color: var(--muted);
+}
+
+.calendar-page__reminder.tone-danger {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.calendar-page__reminder.tone-warning {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.calendar-page__reminder.tone-info {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.calendar-page__reminder.tone-calm {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
 }
 
 .calendar-page__sidebar-list {

@@ -1,20 +1,40 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import dayjs from 'dayjs'
 import { ElButton, ElMessage, ElMessageBox, ElTag } from 'element-plus'
 import TaskCard from '@/components/TaskCard.vue'
 import TaskDetailDrawer from '@/components/TaskDetailDrawer.vue'
 import TaskFilter from '@/components/TaskFilter.vue'
 import { useTaskStore } from '@/stores/taskStore'
 import type { TaskSort, TaskStatus } from '@/types/task'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const store = useTaskStore()
 const drawerVisible = ref(false)
 const activeTaskId = ref('')
 
 const activeTask = computed(() => store.getTaskById(activeTaskId.value))
 const resultSummary = computed(() => `${store.sortedTasks.length} / ${store.tasks.length}`)
+const dueDateFocusText = computed(() => {
+  return store.filters.dueDate ? dayjs(store.filters.dueDate).format('YYYY 年 M 月 D 日') : ''
+})
+
+watch(
+  () => route.query.dueDate,
+  (dueDateValue) => {
+    const nextDueDate = typeof dueDateValue === 'string' ? dueDateValue : ''
+
+    if (store.filters.dueDate !== nextDueDate) {
+      store.setFilters({
+        ...store.filters,
+        dueDate: nextDueDate,
+      })
+    }
+  },
+  { immediate: true },
+)
 
 function handleCreate() {
   router.push('/tasks/new')
@@ -73,6 +93,10 @@ function handleEditFromDrawer(taskId: string) {
   drawerVisible.value = false
   handleEdit(taskId)
 }
+
+function clearDateFocus() {
+  router.push({ path: '/tasks' })
+}
 </script>
 
 <template>
@@ -91,9 +115,18 @@ function handleEditFromDrawer(taskId: string) {
     <div class="task-list-page__toolbar">
       <div>
         <strong>筛选结果 {{ resultSummary }}</strong>
-        <p>支持关键词、状态、优先级、分类和逾期筛选的实时联动。</p>
+        <p>
+          {{
+            store.filters.dueDate
+              ? `当前已聚焦 ${dueDateFocusText} 的到期任务，可继续编辑和切换状态。`
+              : '支持关键词、状态、优先级、分类、截止日期和逾期筛选的实时联动。'
+          }}
+        </p>
       </div>
-      <el-tag type="info">数据已自动持久化</el-tag>
+      <div class="task-list-page__toolbar-tags">
+        <el-tag v-if="store.filters.dueDate" type="warning" closable @close="clearDateFocus">聚焦 {{ dueDateFocusText }}</el-tag>
+        <el-tag type="info">数据已自动持久化</el-tag>
+      </div>
     </div>
 
     <div v-if="store.sortedTasks.length" class="task-list-page__grid">
@@ -151,6 +184,13 @@ function handleEditFromDrawer(taskId: string) {
   color: var(--muted);
 }
 
+.task-list-page__toolbar-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .task-list-page__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -190,6 +230,10 @@ function handleEditFromDrawer(taskId: string) {
   .task-list-page__toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .task-list-page__toolbar-tags {
+    justify-content: flex-start;
   }
 
   .task-list-page__empty {

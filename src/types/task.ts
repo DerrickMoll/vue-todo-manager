@@ -31,6 +31,7 @@ export interface TaskFilters {
   status: TaskStatus | 'all'
   priority: TaskPriority | 'all'
   category: string
+  dueDate: string
   overdue: 'all' | 'overdue' | 'on-time'
 }
 

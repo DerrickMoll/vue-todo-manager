@@ -27,6 +27,7 @@ const defaultFilters: TaskFilters = {
   status: 'all',
   priority: 'all',
   category: '',
+  dueDate: '',
   overdue: 'all',
 }
 
@@ -196,6 +197,10 @@ export const useTaskStore = defineStore('task', () => {
       }
 
       if (filters.value.category && task.category !== filters.value.category) {
+        return false
+      }
+
+      if (filters.value.dueDate && task.dueDate !== filters.value.dueDate) {
         return false
       }
 

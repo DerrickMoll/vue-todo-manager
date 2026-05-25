@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElButton, ElIcon, ElInput, ElOption, ElRadioButton, ElRadioGroup, ElSelect } from 'element-plus'
+import { ElButton, ElDatePicker, ElIcon, ElInput, ElOption, ElRadioButton, ElRadioGroup, ElSelect } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import type { TaskFilters, TaskSort } from '@/types/task'
 
@@ -45,6 +45,10 @@ function handlePriorityChange(value: TaskFilters['priority']) {
 
 function handleCategoryChange(value: string | undefined) {
   updateFilter('category', value ?? '')
+}
+
+function handleDueDateChange(value: string | undefined) {
+  updateFilter('dueDate', value ?? '')
 }
 
 function handleOverdueChange(value: TaskFilters['overdue']) {
@@ -106,6 +110,15 @@ function handleSortOrderChange(value: string | number | boolean | undefined) {
         <el-option label="全部分类" value="" />
         <el-option v-for="category in categories" :key="category" :label="category" :value="category" />
       </el-select>
+
+      <el-date-picker
+        :model-value="filters.dueDate || undefined"
+        type="date"
+        value-format="YYYY-MM-DD"
+        clearable
+        placeholder="按截止日期筛选"
+        @change="handleDueDateChange"
+      />
 
       <el-select :model-value="filters.overdue" @change="handleOverdueChange">
         <el-option label="全部时效" value="all" />
