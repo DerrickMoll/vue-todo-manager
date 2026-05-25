@@ -5,7 +5,7 @@ import 'dayjs/locale/zh-cn'
 import { ElButton, ElConfigProvider, ElIcon } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { useRoute, useRouter } from 'vue-router'
-import { DataAnalysis, Document, EditPen, HomeFilled, Menu, MoonNight, Operation, Setting, Sunny } from '@element-plus/icons-vue'
+import { Calendar, DataAnalysis, Document, EditPen, HomeFilled, Menu, MoonNight, Operation, Setting, Sunny } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/taskStore'
 
 dayjs.locale('zh-cn')
@@ -20,6 +20,7 @@ const navigationItems = [
   { name: 'dashboard', label: '仪表盘', to: '/', icon: HomeFilled },
   { name: 'tasks', label: '任务列表', to: '/tasks', icon: Document },
   { name: 'board', label: '看板视图', to: '/board', icon: Operation },
+  { name: 'calendar', label: '日历视图', to: '/calendar', icon: Calendar },
   { name: 'stats', label: '统计分析', to: '/stats', icon: DataAnalysis },
   { name: 'settings', label: '设置中心', to: '/settings', icon: Setting },
 ]
