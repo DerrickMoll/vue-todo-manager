@@ -63,6 +63,106 @@ function resolveCompletedAt(currentTask: TaskItem, nextStatus: TaskStatus) {
   return currentTask.status === 'completed' ? currentTask.completedAt || currentTask.updatedAt : new Date().toISOString()
 }
 
+function buildDemoTasks() {
+  const dayFormat = 'YYYY-MM-DD'
+  const at = (dayOffset: number, hour: number, minute = 0) =>
+    dayjs().add(dayOffset, 'day').hour(hour).minute(minute).second(0).millisecond(0).toISOString()
+
+  return [
+    {
+      id: crypto.randomUUID(),
+      title: '完成软件工程课程答辩稿',
+      description: '梳理系统亮点、演示流程与问答要点，保证答辩展示顺畅。',
+      status: 'in-progress',
+      priority: 'high',
+      dueDate: dayjs().add(1, 'day').format(dayFormat),
+      category: '学习',
+      tags: ['课程作业', '答辩', 'PPT'],
+      createdAt: at(-6, 9),
+      updatedAt: at(-1, 20),
+      completedAt: null,
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '整理项目演示截图与录屏',
+      description: '补齐首页、列表、统计和设置页面截图，保留一段完整录屏用于展示。',
+      status: 'todo',
+      priority: 'high',
+      dueDate: dayjs().add(2, 'day').format(dayFormat),
+      category: '项目',
+      tags: ['展示', '录屏'],
+      createdAt: at(-4, 14),
+      updatedAt: at(-2, 16),
+      completedAt: null,
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '预约队友联调时间',
+      description: '确认演示当天分工，检查谁负责讲解、谁负责操作页面。',
+      status: 'todo',
+      priority: 'medium',
+      dueDate: dayjs().subtract(1, 'day').format(dayFormat),
+      category: '工作',
+      tags: ['协作', '联调'],
+      createdAt: at(-5, 11),
+      updatedAt: at(-3, 18),
+      completedAt: null,
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '完善 README 与运行说明',
+      description: '补充技术栈、功能清单、运行步骤、Git 查看方式和项目总结。',
+      status: 'completed',
+      priority: 'medium',
+      dueDate: dayjs().subtract(2, 'day').format(dayFormat),
+      category: '项目',
+      tags: ['文档', 'README'],
+      createdAt: at(-7, 10),
+      updatedAt: at(-2, 21),
+      completedAt: at(-2, 21),
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '复盘近七天任务完成趋势',
+      description: '根据统计图观察高优先级任务与逾期任务的分布情况。',
+      status: 'completed',
+      priority: 'low',
+      dueDate: dayjs().subtract(3, 'day').format(dayFormat),
+      category: '学习',
+      tags: ['复盘', '图表'],
+      createdAt: at(-6, 19),
+      updatedAt: at(-1, 9),
+      completedAt: at(-1, 9),
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '购买答辩当天需要的 U 盘',
+      description: '准备演示备份文件，避免现场设备兼容问题。',
+      status: 'completed',
+      priority: 'low',
+      dueDate: dayjs().subtract(4, 'day').format(dayFormat),
+      category: '生活',
+      tags: ['准备', '备份'],
+      createdAt: at(-8, 18),
+      updatedAt: at(-4, 20),
+      completedAt: at(-4, 20),
+    },
+    {
+      id: crypto.randomUUID(),
+      title: '优化移动端操作体验',
+      description: '检查筛选栏、表单和统计卡片在手机宽度下的布局与触控体验。',
+      status: 'in-progress',
+      priority: 'medium',
+      dueDate: dayjs().add(3, 'day').format(dayFormat),
+      category: '项目',
+      tags: ['响应式', 'UI'],
+      createdAt: at(-3, 13),
+      updatedAt: at(0, 10),
+      completedAt: null,
+    },
+  ] satisfies TaskItem[]
+}
+
 export const useTaskStore = defineStore('task', () => {
   const tasks = ref<TaskItem[]>(loadTasks())
   const filters = ref<TaskFilters>({ ...defaultFilters })
@@ -293,6 +393,14 @@ export const useTaskStore = defineStore('task', () => {
     persist()
   }
 
+  function loadDemoTasks() {
+    tasks.value = buildDemoTasks()
+    filters.value = { ...defaultFilters }
+    sort.value = { ...defaultSort }
+    persist()
+    return tasks.value.length
+  }
+
   function getTaskById(taskId: string) {
     return tasks.value.find((task) => task.id === taskId) ?? null
   }
@@ -334,6 +442,7 @@ export const useTaskStore = defineStore('task', () => {
     deleteTask,
     clearCompleted,
     clearAll,
+    loadDemoTasks,
     getTaskById,
     exportTasks,
     importTasks,

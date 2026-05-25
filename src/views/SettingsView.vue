@@ -35,6 +35,26 @@ function triggerImport() {
   fileInputRef.value?.click()
 }
 
+async function loadDemoTasks() {
+  try {
+    await ElMessageBox.confirm(
+      store.stats.total
+        ? '加载演示数据会覆盖当前本地任务，用于答辩展示会更直观，是否继续？'
+        : '将写入一组演示任务，用于快速展示看板、统计和筛选效果。',
+      '加载演示数据',
+      {
+        type: 'warning',
+        confirmButtonText: '加载演示数据',
+        cancelButtonText: '取消',
+      },
+    )
+    const count = store.loadDemoTasks()
+    ElMessage.success(`已加载 ${count} 条演示任务`)
+  } catch {
+    return
+  }
+}
+
 async function handleImport(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -112,6 +132,7 @@ async function clearAll() {
       <p>当前本地共保存 {{ store.stats.total }} 条任务，其中已完成 {{ store.stats.completed }} 条。</p>
 
       <div class="settings-page__actions">
+        <el-button type="primary" @click="loadDemoTasks">加载演示数据</el-button>
         <el-button plain @click="exportTasks">导出 JSON 数据</el-button>
         <el-button plain @click="triggerImport">导入备份文件</el-button>
         <el-button plain @click="clearCompleted">清理已完成任务</el-button>
@@ -119,6 +140,12 @@ async function clearAll() {
       </div>
 
       <input ref="fileInputRef" class="visually-hidden" type="file" accept=".json,application/json" @change="handleImport" />
+    </article>
+
+    <article class="surface-card settings-page__panel">
+      <span class="eyebrow">高分展示</span>
+      <h2>一键生成演示场景</h2>
+      <p>如果答辩现场需要快速展示完整功能，可以一键加载带分类、优先级、逾期和完成趋势的演示任务。</p>
     </article>
 
     <article class="surface-card settings-page__panel">
